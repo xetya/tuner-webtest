@@ -1,0 +1,228 @@
+/* ==========================================================================
+   TUNER — standalone web build stylesheet
+   Palette borrowed from the original assets/css/pm3u-player.css :root
+   tokens (--theme-*, --bg-*) so the look stays on-brand with PlayM3U-PRO,
+   rebuilt for a plain browser (no native Android/Tizen/WebOS runtime).
+   ========================================================================== */
+
+:root{
+  --theme-light:#66d8ff;
+  --theme-moderate:#118599;
+  --theme-dark:#0d3949;
+  --theme-highlight:var(--theme-moderate);
+
+  --bg-light:#313338;
+  --bg-moderate:#2b2d31;
+  --bg-dark:#1e1f22;
+
+  --gradient-headline:linear-gradient(45deg,var(--theme-dark),var(--theme-moderate) 200px,var(--theme-light) 500px);
+
+  --panel-w:380px;
+  --focus-ring:0 0 0 3px #fff, 0 0 0 6px var(--theme-light);
+  --radius:12px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:#000;color:#fff}
+body{
+  font-family:"Segoe UI",Roboto,system-ui,-apple-system,sans-serif;
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+}
+button,input{font-family:inherit}
+
+/* ---------- layout ---------- */
+.tuner{position:relative;height:100vh;height:100dvh;background:#000}
+
+.stage{
+  position:absolute;inset:0;
+  background:#000;
+  touch-action:pan-y;
+}
+#player{width:100%;height:100%;object-fit:contain;background:#000;display:block}
+
+/* ---------- topbar ---------- */
+.topbar{
+  position:absolute;z-index:20;left:0;right:0;top:0;
+  padding:16px 20px;
+  display:flex;gap:10px;align-items:center;
+  background:linear-gradient(#000c,transparent 90%);
+  transition:opacity .25s ease, transform .25s ease;
+}
+.tuner.idle .topbar{opacity:0;transform:translateY(-8px);pointer-events:none}
+
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;letter-spacing:.05em;margin-right:auto;font-size:15px;opacity:.85}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--theme-light);box-shadow:0 0 8px var(--theme-light)}
+
+.iconbtn{
+  width:44px;height:44px;flex:0 0 auto;border-radius:50%;border:0;
+  background:#ffffff1a;color:#fff;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:background .15s ease, transform .15s ease;
+}
+.iconbtn:hover{background:#ffffff33}
+.iconbtn:focus-visible,.iconbtn.focused{outline:none;box-shadow:var(--focus-ring)}
+.iconbtn svg{width:20px;height:20px}
+
+/* ---------- status / errors ---------- */
+.status{
+  position:absolute;left:20px;bottom:20px;z-index:15;
+  background:#000000b3;border-radius:8px;padding:9px 14px;font-size:13px;
+  max-width:70%;
+  transition:opacity .25s ease;
+}
+.tuner.idle .status{opacity:0}
+.status.err{background:#7a1f1fcc}
+
+/* ==========================================================================
+   Now-playing OSD card — shown briefly on every channel change, sized to be
+   legible from a TV-viewing distance (10-foot UI): big logo, big number,
+   big name. Fades out automatically.
+   ========================================================================== */
+.osd{
+  position:absolute;left:0;right:0;bottom:0;z-index:18;
+  display:flex;justify-content:center;
+  padding:0 4vw 4vh;
+  pointer-events:none;
+  opacity:0;transform:translateY(24px);
+  transition:opacity .28s ease, transform .28s ease;
+}
+.osd.show{opacity:1;transform:translateY(0)}
+.osd-card{
+  display:flex;align-items:center;gap:22px;
+  background:linear-gradient(180deg,#14161ae6,#0b0c0ef2);
+  border:1px solid #ffffff22;
+  border-radius:18px;
+  padding:18px 34px 18px 20px;
+  max-width:min(860px,92vw);
+  box-shadow:0 12px 40px #000a;
+}
+.osd-logo{
+  width:76px;height:76px;border-radius:10px;background:#ffffff12;
+  display:flex;align-items:center;justify-content:center;flex:0 0 auto;overflow:hidden;
+}
+.osd-logo img{max-width:100%;max-height:100%;object-fit:contain}
+.osd-logo .fallback{font-size:30px;font-weight:800;opacity:.6}
+.osd-num{
+  font-size:44px;font-weight:800;color:var(--theme-light);min-width:1.6em;text-align:right;
+  font-variant-numeric:tabular-nums;line-height:1;
+}
+.osd-text{min-width:0}
+.osd-name{font-size:30px;font-weight:700;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.osd-group{font-size:17px;opacity:.7;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.osd-hint{font-size:13px;opacity:.55;margin-top:8px}
+
+@media(max-width:700px){
+  .osd-card{gap:14px;padding:12px 20px 12px 14px}
+  .osd-logo{width:56px;height:56px}
+  .osd-num{font-size:30px}
+  .osd-name{font-size:20px}
+  .osd-group{font-size:14px}
+}
+
+/* swipe affordance hint, mobile only, fades after first interaction */
+.swipe-hint{
+  position:absolute;z-index:16;right:18px;top:50%;transform:translateY(-50%);
+  display:none;flex-direction:column;align-items:center;gap:6px;
+  color:#fff9;font-size:12px;text-align:center;
+  animation:swipe-bounce 1.8s ease-in-out infinite;
+  pointer-events:none;
+}
+.tuner.touch .swipe-hint{display:flex}
+.tuner.touch.hint-dismissed .swipe-hint{display:none}
+@keyframes swipe-bounce{0%,100%{transform:translateY(-50%)}50%{transform:translateY(calc(-50% - 8px))}}
+
+/* ---------- channel drawer (list) ---------- */
+.drawer{
+  position:absolute;z-index:25;top:0;right:0;bottom:0;width:var(--panel-w);max-width:92vw;
+  background:#17181bf2;backdrop-filter:blur(6px);
+  border-left:1px solid #ffffff1a;
+  display:flex;flex-direction:column;min-width:0;
+  transform:translateX(100%);
+  transition:transform .25s ease;
+}
+.drawer.open{transform:translateX(0)}
+.drawer-head{padding:16px 16px 12px;border-bottom:1px solid #ffffff1a}
+.drawer-head h2{margin:0 0 8px;font-size:19px;display:flex;align-items:center;justify-content:space-between}
+.drawer-head #count{font-size:12px;opacity:.6;font-weight:400}
+#search{
+  width:100%;padding:11px 12px;font-size:14px;border-radius:9px;border:1px solid #ffffff2a;
+  background:#00000055;color:#fff;
+}
+#search:focus{outline:none;border-color:var(--theme-light)}
+
+#channels{overflow:auto;padding:10px;flex:1}
+.channel{
+  width:100%;display:flex;gap:10px;align-items:center;text-align:left;
+  background:#ffffff0f;border:0;color:#fff;padding:9px;margin:0 0 6px;border-radius:9px;cursor:pointer;
+}
+.channel:hover{background:#ffffff1c}
+.channel.active{background:var(--theme-highlight)}
+.channel.focused{outline:none;box-shadow:var(--focus-ring)}
+.channel img{width:38px;height:38px;object-fit:contain;flex:0 0 38px;border-radius:4px;background:#0002}
+.channel span{min-width:0;display:flex;flex-direction:column;gap:2px}
+.channel b,.channel small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.channel small{opacity:.6}
+.channel .no{opacity:.45;font-size:11px;width:26px;flex:0 0 26px;text-align:right}
+.empty-hint{opacity:.6;font-size:13px;padding:20px 10px;text-align:center}
+
+.drawer-foot{padding:10px 16px;font-size:11px;opacity:.5;border-top:1px solid #ffffff1a}
+
+@media(max-width:700px){
+  .drawer{width:100%;max-width:100%}
+}
+
+/* ---------- modal (playlist manager) ---------- */
+.modal-backdrop{
+  position:fixed;inset:0;z-index:40;background:#000a;
+  display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal-backdrop.open{display:flex}
+.modal{
+  width:100%;max-width:520px;max-height:86vh;overflow:auto;
+  background:#1e1f22;border:1px solid #ffffff1e;border-radius:16px;
+  padding:22px;
+}
+.modal h2{margin:0 0 4px;font-size:20px}
+.modal .sub{opacity:.6;font-size:13px;margin:0 0 18px}
+.modal label.field{display:block;font-size:12px;opacity:.7;margin:14px 0 6px}
+.modal input[type=text],.modal input[type=url]{
+  width:100%;padding:11px 12px;font-size:14px;border-radius:9px;border:1px solid #ffffff2a;
+  background:#00000055;color:#fff;
+}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+.btn{
+  padding:11px 14px;border-radius:9px;border:1px solid #ffffff26;background:#ffffff14;color:#fff;
+  cursor:pointer;font-size:14px;
+}
+.btn:hover{background:#ffffff26}
+.btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.btn.primary{background:var(--theme-highlight);border-color:transparent}
+.btn.primary:hover{background:var(--theme-light);color:#04262e}
+.btn.danger{background:#7a1f1f}
+.btn.danger:hover{background:#a12727}
+.filebtn{display:flex;align-items:center;justify-content:center}
+
+.saved-playlists{margin-top:18px;display:flex;flex-direction:column;gap:8px}
+.saved-item{
+  display:flex;align-items:center;gap:10px;background:#ffffff0d;border-radius:10px;padding:10px 12px;
+  border:1px solid transparent;
+}
+.saved-item.active{border-color:var(--theme-light)}
+.saved-item .meta{min-width:0;flex:1}
+.saved-item .meta b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saved-item .meta small{opacity:.55;font-size:11px}
+.saved-item .actions{display:flex;gap:6px}
+.saved-item .actions button{
+  width:34px;height:34px;border-radius:8px;border:0;background:#ffffff14;color:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.saved-item .actions button:hover{background:#ffffff26}
+.saved-item .actions svg{width:16px;height:16px}
+
+.modal-close{
+  position:sticky;top:0;float:right;margin-top:-6px;margin-right:-6px;
+  width:34px;height:34px;border-radius:50%;border:0;background:#ffffff14;color:#fff;cursor:pointer;
+}
+
+.divider{height:1px;background:#ffffff1a;margin:18px 0}
